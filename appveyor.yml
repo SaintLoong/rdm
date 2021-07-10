@@ -180,6 +180,7 @@ build_script:
 
 artifacts:
   - path: rdm-$(RDM_VERSION).zip
+  - path: rdm-%RDM_VERSION%-src.zip
   - path: rdm-$(RDM_VERSION).exe
 
 deploy:
