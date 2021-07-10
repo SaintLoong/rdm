@@ -1,0 +1,95 @@
+diff --git a/3rdparty/pyotherside b/3rdparty/pyotherside
+--- a/3rdparty/pyotherside
++++ b/3rdparty/pyotherside
+@@ -1 +1 @@
+-Subproject commit c1a8cc03266b3b620ba9195e365e8751a8e4c9ef
++Subproject commit c1a8cc03266b3b620ba9195e365e8751a8e4c9ef-dirty
+diff --git a/3rdparty/qredisclient b/3rdparty/qredisclient
+--- a/3rdparty/qredisclient
++++ b/3rdparty/qredisclient
+@@ -1 +1 @@
+-Subproject commit 68621f345b07d94b9699b21ddb39fd10dc89aca5
++Subproject commit 68621f345b07d94b9699b21ddb39fd10dc89aca5-dirty
+diff --git a/src/qml/AppToolBar.qml b/src/qml/AppToolBar.qml
+index 1ae4b2a8..62e932bd 100644
+--- a/src/qml/AppToolBar.qml
++++ b/src/qml/AppToolBar.qml
+@@ -73,42 +73,42 @@ ToolBar {
+ 
+         Rectangle { width: 1; color: sysPalette.mid; Layout.fillHeight: true;}
+ 
+-        Item { Layout.fillWidth: true }
+-
+-        BetterButton {
+-            implicitWidth: 40
+-            iconSource: "qrc:/images/alert.svg"
+-            tooltip: qsTranslate("RDM","Report issue")
+-            onClicked: Qt.openUrlExternally("https://github.com/uglide/RedisDesktopManager/issues")
+-        }
+-
+-        BetterButton {
+-            implicitWidth: 40
+-            iconSource: "qrc:/images/help.svg"
+-            tooltip: qsTranslate("RDM","Documentation")
+-            onClicked: Qt.openUrlExternally("http://docs.rdm.dev/en/latest/")
+-        }
+-
+-        BetterButton {
+-            implicitWidth: 40
+-            iconSource: "qrc:/images/telegram.svg"
+-            tooltip: qsTranslate("RDM","Join Telegram Chat")
+-            onClicked: Qt.openUrlExternally("https://t.me/RedisDesktopManager")
+-        }
+-
+-        BetterButton {
+-            implicitWidth: 40
+-            iconSource: "qrc:/images/twi.svg"
+-            tooltip: qsTranslate("RDM","Follow")
+-            onClicked: Qt.openUrlExternally("https://twitter.com/RedisDesktop")
+-        }
+-
+-        BetterButton {
+-            implicitWidth: 40
+-            iconSource: "qrc:/images/github.svg"
+-            tooltip: qsTranslate("RDM","Star on GitHub!")
+-            onClicked: Qt.openUrlExternally("https://github.com/uglide/RedisDesktopManager")
+-        }
++//        Item { Layout.fillWidth: true }
++
++//        BetterButton {
++//            implicitWidth: 40
++//            iconSource: "qrc:/images/alert.svg"
++//            tooltip: qsTranslate("RDM","Report issue")
++//            onClicked: Qt.openUrlExternally("https://github.com/uglide/RedisDesktopManager/issues")
++//        }
++
++//        BetterButton {
++//            implicitWidth: 40
++//            iconSource: "qrc:/images/help.svg"
++//            tooltip: qsTranslate("RDM","Documentation")
++//            onClicked: Qt.openUrlExternally("http://docs.rdm.dev/en/latest/")
++//        }
++
++//        BetterButton {
++//            implicitWidth: 40
++//            iconSource: "qrc:/images/telegram.svg"
++//            tooltip: qsTranslate("RDM","Join Telegram Chat")
++//            onClicked: Qt.openUrlExternally("https://t.me/RedisDesktopManager")
++//        }
++
++//        BetterButton {
++//            implicitWidth: 40
++//            iconSource: "qrc:/images/twi.svg"
++//            tooltip: qsTranslate("RDM","Follow")
++//            onClicked: Qt.openUrlExternally("https://twitter.com/RedisDesktop")
++//        }
++
++//        BetterButton {
++//            implicitWidth: 40
++//            iconSource: "qrc:/images/github.svg"
++//            tooltip: qsTranslate("RDM","Star on GitHub!")
++//            onClicked: Qt.openUrlExternally("https://github.com/uglide/RedisDesktopManager")
++//        }
+ 
+         Item { Layout.fillWidth: true }
+ 

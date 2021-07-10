@@ -1,0 +1,202 @@
+os: Visual Studio 2019
+version: 2021.6.{build}
+clone_depth: 5
+skip_tags: true
+
+install:
+  - set /P RDM_TAG=<version.txt
+  - set RDM_TARGET_BRANCH=2021
+  - set PYTHON_EMBEDDED_VERSION=3.8.10
+
+  # directories
+  - set REPO_DIR=%CD%
+  - set RDM_DIR=C:\projects\source
+  - set RESOURCE_DIR=%RDM_DIR%\build\windows\installer\resources
+  - set OPENSSL_DIR=C:\OpenSSL-Win64
+  - set GITBASH_DIR=C:\Program Files\Git\usr\bin
+  - set PY_DIR=C:\Python38-x64
+  - set QT_DIR=C:\Qt\5.15\msvc2019_64
+
+  # prefer using Linux utils such as "find"
+  - set PATH=%GITBASH_DIR%;%PY_DIR%;%QT_DIR%\bin;%PATH%
+
+  # update all submodules for this repo
+  - git submodule update --init --recursive --depth 1
+
+  # clone the RedisDesktopManager repo
+  - git clone
+    --depth=1
+    --recursive
+    --branch=%RDM_TARGET_BRANCH%
+    https://github.com/uglide/RedisDesktopManager.git
+    "%RDM_DIR%"
+
+  # apply patches to the RedisDesktopManager repo
+  - cp -rf %REPO_DIR%/deps/* %RDM_DIR%
+
+  - cd %RDM_DIR%
+  - git apply -v 0001-add-local-vcredist.patch
+  - git apply -v 0002-remove-app-tool-bar.patch
+  - git apply -v 0003-add-some-info.patch
+
+  - cd %RDM_DIR%/3rdparty/qredisclient
+  - git apply -v 0001-fix-ssh-tunnel.patch
+  - git apply -v 0002-del-redis-sentinel-connection-logs.patch
+
+  - cd %RDM_DIR%/3rdparty/qredisclient/3rdparty/hiredis
+  - git apply -v ../hiredis-win.patch
+
+  # enable environment
+  - call
+    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat"
+    x86_amd64
+
+  - qmake -v
+  - python -VV
+  - cmake --version
+  - openssl version
+
+before_build:
+  - cd %RDM_DIR%
+  - git rev-parse --short=8 HEAD > hash.txt
+  - set /P RDM_HASH= < hash.txt
+
+  # the version number (must be in the form of x.y.z)
+  - set RDM_VERSION=%APPVEYOR_BUILD_VERSION%
+#  # the tag name of this release such as 2020.0.270-5a10305a
+#  - set RDM_RELEASE_TAG=%RDM_VERSION%.%RDM_HASH%
+
+build_script:
+  # build qsshclient
+  - cd %RDM_DIR%/3rdparty/qredisclient/3rdparty/qsshclient
+  - qmake CONFIG+=release
+  - nmake /S /NOLOGO release
+
+  # build libssh2
+  - cd %RDM_DIR%/3rdparty/qredisclient/3rdparty/qsshclient/3rdparty/libssh2
+  - cmake .
+    -G "Visual Studio 16 2019" -A x64
+    -DOPENSSL_ROOT_DIR="%OPENSSL_DIR%"
+    -DCRYPTO_BACKEND=OpenSSL
+    -DCMAKE_BUILD_TYPE=RELEASE
+    -DBUILD_SHARED_LIBS=on
+    -DBUILD_EXAMPLES=off
+    -DBUILD_TESTING=off
+    -DCMAKE_INSTALL_PREFIX=output
+  - cmake
+    --build .
+    --config "Release"
+    --target install
+  - mkdir build\src\release
+  - cp -f output/lib/libssh2.lib %RDM_DIR%/3rdparty/qredisclient/3rdparty/qsshclient/
+  - cp -f output/bin/libssh2.dll %RESOURCE_DIR%/
+
+  # build lz4.lib
+  - cd %RDM_DIR%/3rdparty/lz4/build/cmake
+  - cmake .
+    -G "Visual Studio 16 2019" -A x64
+    -DLZ4_BUNDLED_MODE=on
+    -DBUILD_SHARED_LIBS=on
+  - cmake
+    --build .
+    --config "Release"
+
+  # build app
+  - cd %RDM_DIR%/3rdparty
+  - nuget install zlib-msvc14-x64 -Version 1.2.11.7795
+
+  - cd %RDM_DIR%/src
+  - lrelease rdm.pro
+  - qmake
+    VERSION="%RDM_VERSION%"
+    CONFIG+=release
+    CONFIG+=qtquickcompiler
+    DEFINES+="SSH_SUPPORT=1"
+    LIBS+="-L%RDM_DIR%/3rdparty/qredisclient/3rdparty/qsshclient"
+    LIBS+="-lqsshclient -llibssh2"
+    INCLUDEPATH+="%RDM_DIR%/3rdparty/qredisclient/3rdparty/qsshclient/src"
+    INCLUDEPATH+="%RDM_DIR%/3rdparty/qredisclient/3rdparty/qsshclient/3rdparty/libssh2/output/include"
+  - nmake /S /NOLOGO release
+
+  - cd %RDM_DIR%
+  - cp -f bin/windows/release/rdm.exe %RESOURCE_DIR%/
+
+  # make rdm.exe Qt-distributable
+  - cd %RESOURCE_DIR%
+  - windeployqt
+    --no-angle
+    --no-opengl-sw
+    --no-compiler-runtime
+    --no-translations
+    --release
+    --force
+    --qmldir %RDM_DIR%/src/qml
+    rdm.exe
+
+  # seems to be useless
+  - rm -rf
+    platforminputcontexts/
+    qmltooling/
+    QtGraphicalEffects/
+    imageformats/qtiff.dll
+    imageformats/qwebp.dll
+
+  # install python deps
+  - cd %RDM_DIR%
+  - md temp
+  - cd %RDM_DIR%/temp
+  - curl -fsSL
+    -o python-embedded.zip
+    "https://www.python.org/ftp/python/%PYTHON_EMBEDDED_VERSION%/python-%PYTHON_EMBEDDED_VERSION%-embed-amd64.zip"
+  - 7z.exe x python-embedded.zip python*.zip *.pyd *.dll
+  # remove unused files
+  - cp -f python38.zip python38.dll _bz2.pyd unicodedata.pyd %RESOURCE_DIR%/
+
+  - cd %RESOURCE_DIR%
+  - md Lib
+  - cp -rf %RDM_DIR%/src/py Lib/site-packages
+  - cd Lib/site-packages
+  - python -m pip install --upgrade pip wheel
+  - python -m pip install -r requirements.txt -t .
+  - python -m pip list --path .
+  - python -m compileall -b .
+  # remove unused files
+  - find . -name '*.exe' -type f -print0 | xargs -0 rm -f
+  - find . -name '*.py' -type f -print0 | xargs -0 rm -f
+  - find . -name __pycache__ -type d -print0 | xargs -0 rm -rf
+  - find . -name bin -type d -print0 | xargs -0 rm -rf
+  - rm -rf py.qrc requirements.txt *.dist-info *.egg-info
+
+  # bundle installer
+  - cd %RDM_DIR%
+  - call "C:\\Program Files (x86)\\NSIS\\makensis.exe" /V1 /DVERSION=%RDM_VERSION% ./build/windows/installer/installer.nsi
+
+  # create artifacts
+  - cd %APPVEYOR_BUILD_FOLDER%
+  - rm -rf %RDM_DIR%/build/windows/installer/resources/vc_redist.x64.exe
+  - 7z.exe a rdm-%RDM_VERSION%.zip %RDM_DIR%/build/windows/installer/resources/*
+  - cp -f %RDM_DIR%/build/windows/installer/rdm-%RDM_VERSION%.exe %APPVEYOR_BUILD_FOLDER%
+  - 7z.exe a -xr"!*\.git\" rdm-%RDM_VERSION%-src.zip  %RDM_DIR%/*
+
+artifacts:
+  - path: rdm-$(RDM_VERSION).zip
+  - path: rdm-$(RDM_VERSION).exe
+
+deploy:
+  release: $(RDM_TAG)
+  description: |-
+    # Synchronize author changes
+
+    - [![GitHub Releases](https://img.shields.io/github/downloads/kanyways/rdm/$(RDM_TAG)/total?label=&logo=github&style=flat-squar)](https://github.com/kanyways/rdm/releases/$(RDM_TAG))
+    - [![GitHub All Releases](https://img.shields.io/github/downloads/kanyways/rdm/$(RDM_TAG)/rdm-$(RDM_VERSION).exe?label=&logo=github&style=flat-squar)](https://github.com/kanyways/rdm/releases/download/$(RDM_TAG)/rdm-$(RDM_VERSION).exe)
+    - [![GitHub All Releases](https://img.shields.io/github/downloads/kanyways/rdm/$(RDM_TAG)/rdm-$(RDM_VERSION).zip?label=&logo=github&style=flat-squar)](https://github.com/kanyways/rdm/releases/download/$(RDM_TAG)/rdm-$(RDM_VERSION).zip)
+    - [![GitHub All Releases](https://img.shields.io/github/downloads/kanyways/rdm/$(RDM_TAG)/rdm-%RDM_VERSION%-src.zip?label=&logo=github&style=flat-squar)](https://github.com/kanyways/rdm/releases/download/$(RDM_TAG)/rdm-%RDM_VERSION%-src.zip)
+  provider: GitHub
+  auth_token:
+    secure: 4nu0bBSVAGCmqy8nN79PmvVTVdJsLwv6201IvMXUpCna3WR5qS9B3gzHHM1UHXGm # your encrypted token from GitHub
+  artifact: rdm-$(RDM_VERSION).zip,rdm-$(RDM_VERSION).exe,rdm-%RDM_VERSION%-src.zip # upload all NuGet packages to release assets
+  draft: true
+  prerelease: true
+  force_update: true
+  on:
+    branch: master # release from master branch only

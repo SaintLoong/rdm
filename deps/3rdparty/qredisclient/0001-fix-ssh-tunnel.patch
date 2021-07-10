@@ -1,0 +1,22 @@
+diff --git a/3rdparty/3rdparty.pri b/3rdparty/3rdparty.pri
+index 5b87efa..aa87daa 100644
+--- a/3rdparty/3rdparty.pri
++++ b/3rdparty/3rdparty.pri
+@@ -13,3 +13,4 @@ SOURCES += $$PWD/hiredis/read.c \
+ 
+ # Asyncfuture
+ include($$PWD/asyncfuture/asyncfuture.pri)
++include($$PWD/qsshclient/qsshclient.pri)
+diff --git a/src/qredisclient/connection.cpp b/src/qredisclient/connection.cpp
+index 58522c5..f113d44 100644
+--- a/src/qredisclient/connection.cpp
++++ b/src/qredisclient/connection.cpp
+@@ -13,7 +13,7 @@
+ #include "utils/sync.h"
+ 
+ #ifdef SSH_SUPPORT
+-#include "sshtransporter.h"
++#include "transporters/sshtransporter.h"
+ #endif
+ 
+ inline void initResources() { Q_INIT_RESOURCE(lua); }

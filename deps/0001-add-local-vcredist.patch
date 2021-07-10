@@ -1,0 +1,36 @@
+diff --git a/3rdparty/pyotherside b/3rdparty/pyotherside
+--- a/3rdparty/pyotherside
++++ b/3rdparty/pyotherside
+@@ -1 +1 @@
+-Subproject commit c1a8cc03266b3b620ba9195e365e8751a8e4c9ef
++Subproject commit c1a8cc03266b3b620ba9195e365e8751a8e4c9ef-dirty
+diff --git a/3rdparty/qredisclient b/3rdparty/qredisclient
+--- a/3rdparty/qredisclient
++++ b/3rdparty/qredisclient
+@@ -1 +1 @@
+-Subproject commit 68621f345b07d94b9699b21ddb39fd10dc89aca5
++Subproject commit 68621f345b07d94b9699b21ddb39fd10dc89aca5-dirty
+diff --git a/build/windows/installer/installer.nsi b/build/windows/installer/installer.nsi
+index d49dd548..386e0058 100644
+--- a/build/windows/installer/installer.nsi
++++ b/build/windows/installer/installer.nsi
+@@ -13,8 +13,8 @@ ManifestDPIAware true
+ 
+ # General Symbol Definitions
+ !define REGKEY "SOFTWARE\$(Name)"
+-!define COMPANY "Igor Malinovskiy"
+-!define URL rdm.dev
++!define COMPANY "Kany.me"
++!define URL kany.me
+ !define APP_EXE "rdm.exe"
+ 
+ # MUI Symbol Definitions
+@@ -27,7 +27,7 @@ ManifestDPIAware true
+ # Included files
+ !include "nsProcess.nsh"
+ !include "x64.nsh"
+-!include "install_vcredist_x64.nsh"
++!include "install_local_vcredist_x64.nsh"
+ !include Sections.nsh
+ !include MUI2.nsh
+ 
