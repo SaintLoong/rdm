@@ -1,0 +1,19 @@
+diff --git a/src/qredisclient/connection.cpp b/src/qredisclient/connection.cpp
+index 58522c5..d2c59fb 100644
+--- a/src/qredisclient/connection.cpp
++++ b/src/qredisclient/connection.cpp
+@@ -867,10 +867,10 @@ void RedisClient::Connection::auth() {
+       } else if (!authResult.isOkMessage()) {
+         // NOTE(u_glide): Workaround for redis-sentinel < 5.0 and for
+         // redis-sentinels >= 5.0.1 without configured password
+-        emit log(QString("redis-server doesn't support AUTH command or is"
+-                         "misconfigured. Trying "
+-                         "to proceed without password. (Error: %1)")
+-                     .arg(authResult.value().toString()));        
++        // emit log(QString("redis-server doesn't support AUTH command or is"
++        //                  "misconfigured. Trying "
++        //                  "to proceed without password. (Error: %1)")
++        //              .arg(authResult.value().toString()));        
+       }
+ 
+       testConnection();

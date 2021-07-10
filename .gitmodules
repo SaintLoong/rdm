@@ -1,0 +1,4 @@
+[submodule "deps/3rdparty/qredisclient/3rdparty/qsshclient"]
+	path = deps/3rdparty/qredisclient/3rdparty/qsshclient
+	url = https://github.com/kanyways/qsshclient.git
+	branch = master
