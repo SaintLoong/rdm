@@ -1,0 +1,67 @@
+# Commented sections below can be used to run tests on the CI server
+# https://simulatedgreg.gitbooks.io/electron-vue/content/en/testing.html#on-the-subject-of-ci-testing
+os: osx
+osx_image: xcode12.5
+language: cpp
+dist: bionic
+sudo: required
+
+before_install:
+  - BASH_HOME=$(pwd)
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+    brew update > /dev/null
+    && brew install python3 > /dev/null
+    && export PATH=/usr/local/opt/qt5/bin/:$PATH;
+    fi
+  - git submodule update --init --recursive --depth 1
+  - git clone
+    --depth=1
+    --recursive
+    https://github.com/uglide/RedisDesktopManager.git
+    RedisDesktopManager
+  # Read version
+  - RDM_VERSION=`cat version.txt`
+  - cd $BASH_HOME/RedisDesktopManager
+  - BUILD_HOME=$BASH_HOME/RedisDesktopManager
+  - echo $RDM_VERSION
+  # SSH
+  - cp -r $BASH_HOME/deps/* $BUILD_HOME/
+  - cd $BUILD_HOME
+  - chmod a+x *.patch
+  - git apply -v 0002-remove-app-tool-bar.patch
+  - git apply -v 0003-add-some-info.patch
+  - cd $BUILD_HOME/3rdparty/qredisclient
+  - chmod a+x *.patch
+  - git apply -v 0001-fix-ssh-tunnel.patch
+  - git apply -v 0002-del-redis-sentinel-connection-logs.patch
+  - rm -rf $BUILD_HOME/build/windows/installer/resources/vc_redist.x64.exe
+  - cd $BUILD_HOME
+  # Set Version
+  - python3 $BUILD_HOME/build/utils/set_version.py $RDM_VERSION > $BUILD_HOME/src/version.h
+  - lrelease $BUILD_HOME/src/rdm.pro
+  - cp $BUILD_HOME/src/resources/Info.plist.sample $BUILD_HOME/src/resources/Info.plist
+
+
+install:
+  - if [ -d "$BUILD_HOME/3rdparty/lz4/build/cmake" ]; then
+    cd $BUILD_HOME/3rdparty/lz4/build/cmake && cmake . -DBUILD_STATIC_LIBS=ON && make;
+    fi
+  - if [ -d "$BUILD_HOME/3rdparty/qredisclient/3rdparty/qsshclient" ]; then
+    cd $BUILD_HOME/3rdparty/qredisclient/3rdparty/qsshclient && ./configure;
+    fi
+
+script:
+  #- xvfb-maybe node_modules/.bin/karma start test/unit/karma.conf.js
+  #- yarn run pack && xvfb-maybe node_modules/.bin/mocha test/e2e
+  - cd $BUILD_HOME/src
+  - qmake VERSION="%RDM_VERSION%" CONFIG-=debug DEFINES+="SSH_SUPPORT=1" CONFIG+=sdk_no_version_check && make -s -j 8 && cd ..
+  - cd $BUILD_HOME/bin/osx/release
+  - if [[ ! -f "RDM.app/Contents/MacOS/RDM" ]]; then
+    echo "文件不存在" && exit -1;
+    fi
+  - macdeployqt 'RDM.app' -qmldir=$BUILD_HOME/src/qml
+  - otool -L 'RDM.app'/Contents/MacOS/'RDM'
+
+branches:
+  only:
+    - master
